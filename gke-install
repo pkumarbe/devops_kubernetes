@@ -1,1 +1,6 @@
 
+sudo apt-get update && sudo apt-get install google-cloud-sdk
+gcloud init
+gcloud container clusters get-credentials standard-cluster-1 --zone us-central1-a --project liquid-almanac-248318
+kubectl get po -n kube-system
+
