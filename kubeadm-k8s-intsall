@@ -1,0 +1,98 @@
+Install Package
+=======================
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+# Set SELinux in permissive mode (effectively disabling it)
+
+Disable Selinux for lab setup
+============================
+setenforce 0
+sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+
+Enable firewalld and add rules
+====================================
+
+firewall-cmd --permanent --add-port=6443/tcp
+firewall-cmd --permanent --add-port=2379-2380/tcp
+firewall-cmd --permanent --add-port=10250/tcp
+firewall-cmd --permanent --add-port=10251/tcp
+firewall-cmd --permanent --add-port=10252/tcp
+firewall-cmd --permanent --add-port=10255/tcp
+firewall-cmd --permanent --add-port=8472/udp
+firewall-cmd --add-masquerade --permanent
+systemctl restart firewall
+systemctl restart firewalld
+
+on Woekrnoder
+===================
+
+firewall-cmd --permanent --add-port=10250/tcp
+firewall-cmd --permanent --add-port=10255/tcp
+firewall-cmd --permanent --add-port=8472/udp
+firewall-cmd --permanent --add-port=30000-32767/tcp
+firewall-cmd --add-masquerade --permanent
+systemctl restart firewall
+systemctl restart firewalld
+
+Install Package
+====================
+yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+systemctl enable --now kubelet
+cat <<EOF >  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system
+
+Bootstrap k8s cluster (Master_
+==================================
+kubeadm init
+--> It takes some time to complete the task and provide a join token at end.
+--> Us that toke using kubeadm join from worker node to join the cluster
+
+Move kube context to .kube directory.
+==========================================
+
+# mkdir ~/.kube
+# cp /etc/kubernetes/admin.conf ~/.kube/config
+
+Apply CNI
+================
+Kubernetes will till install a CNI to make node in Ready status.
+Here I installed calico
+# kubectl apply -f https://docs.projectcalico.org/v3.9/manifests/calico.yaml
+
+-> After few minitues all nodes should be ready state.
+
+# kubectl get no
+NAME       STATUS   ROLES    AGE   VERSION
+node1   Ready    master   89m   v1.16.1
+node2   Ready    <none>   88m   v1.16.1
+
+Apply ha-proxy ingress
+======================
+# kubectl apply -f https://raw.githubusercontent.com/haproxytech/kubernetes-ingress/master/deploy/haproxy-ingress.yaml
+
+# kubectl get po -n haproxy-controller
+NAME                                       READY   STATUS    RESTARTS   AGE
+haproxy-ingress-596fb4b4f4-7cswx           1/1     Running   0          27m
+ingress-default-backend-558fbc9b46-2ntm4   1/1     Running   0          27m
+
+# kubectl get svc -n haproxy-controller
+NAME                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                     AGE
+haproxy-ingress           NodePort    10.109.119.21   <none>        80:32180/TCP,443:30705/TCP,1024:32074/TCP   27m
+ingress-default-backend   ClusterIP   10.110.25.82    <none>        8080/TCP   
+
+
+--> In above we can see the haproxy-controller service is listening usinf nodeport. [80:32180/TCP,443:30705/TCP,1024:32074/TCP]--
+
+
+
+
