@@ -82,8 +82,8 @@ NAME       STATUS   ROLES    AGE   VERSION
 node1   Ready    master   89m   v1.16.1
 node2   Ready    <none>   88m   v1.16.1
 
-Apply ha-proxy ingress
-======================
+Apply ha-proxy ingress using manifests...
+=========================================
 # kubectl apply -f https://raw.githubusercontent.com/haproxytech/kubernetes-ingress/master/deploy/haproxy-ingress.yaml
 
 # kubectl get po -n haproxy-controller
@@ -98,6 +98,20 @@ ingress-default-backend   ClusterIP   10.110.25.82    <none>        8080/TCP
 
 
 --> In above we can see the haproxy-controller service is listening usinf nodeport. [80:32180/TCP,443:30705/TCP,1024:32074/TCP]--
+
+=============================================================================================
+Apply ha-proxy ingress using helm...
+=========================================
+
+helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com
+helm install incubator/haproxy-ingress --version 0.0.20
+
+* By default the above help chart uses default namespace. I think we can customize it to use a different namespace.
+#kubectl get po
+NAME                                                          READY   STATUS    RESTARTS   AGE
+haproxy-ingress-1573933118-controller-648c8f9d49-t6jm7        1/1     Running   0          8m50s
+haproxy-ingress-1573933118-default-backend-79d76dd86b-xzwjw   1/1     Running   0          8m50s
+
 
 
 
