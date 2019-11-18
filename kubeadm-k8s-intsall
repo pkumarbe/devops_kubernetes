@@ -112,7 +112,27 @@ NAME                                                          READY   STATUS    
 haproxy-ingress-1573933118-controller-648c8f9d49-t6jm7        1/1     Running   0          8m50s
 haproxy-ingress-1573933118-default-backend-79d76dd86b-xzwjw   1/1     Running   0          8m50s
 
-
+=======================================================================================
+persistence storage (NFS)
+==============================================================
+yum install nfs-utils
+mkdir /var/k8snfsshare
+chmod -R 755 /var/k8snfsshare
+chown nfsnobody:nfsnobody /var/k8snfsshare/
+systemctl enable rpcbind
+systemctl enable nfs-server
+systemctl enable nfs-lock
+systemctl enable nfs-idmap
+systemctl start rpcbind
+systemctl start nfs-server
+systemctl start nfs-lock
+systemctl start nfs-idmap
+setenforce 0
+sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+# vi /etc/exports
+    /var/k8snfsshare    *(rw,sync,no_root_squash,no_all_squash)
+systemctl restart nfs-server
+showmount -e
 
 
 
