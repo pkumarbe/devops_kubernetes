@@ -56,7 +56,7 @@ net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 EOF
 sysctl --system
-
+yum install docker
 Bootstrap k8s cluster (Master_
 ==================================
 kubeadm init
