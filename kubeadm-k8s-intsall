@@ -1,3 +1,6 @@
+stop sawp
+=============
+swapoff -a
 Install Package
 =======================
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
